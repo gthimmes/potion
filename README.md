@@ -6,6 +6,8 @@ A local-first Notion competitor — block-based docs, nested pages, and database
 
 - **Block editor** — headings, text, to-dos, bulleted/numbered lists, quotes, callouts, code, and dividers.
 - **Inline formatting** — select text for a floating toolbar: bold, italic, underline, strikethrough, inline code, and links.
+- **@-mentions** — type `@` to link to any page inline; click the chip to jump to it.
+- **Image blocks** — embed by URL or upload from your device.
 - **Drag to reorder** — grab the ⋮⋮ handle to reorder blocks.
 - **Slash menu** — type `/` to insert any block; filter by name.
 - **Markdown shortcuts** — `#`/`##`/`###` headings, `-` bullet, `1.` numbered, `[]` to-do, `>` quote, ` ``` ` code.
@@ -42,4 +44,4 @@ src/
 
 ## Roadmap (not yet built)
 
-Real-time collaboration, accounts/auth, sharing & permissions, nested/inline databases, image uploads, and a public API.
+Real-time collaboration, accounts/auth, sharing & permissions, nested/inline databases, and a public API.

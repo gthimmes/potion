@@ -19,6 +19,7 @@ export const BLOCK_COMMANDS: BlockCommand[] = [
   { type: "quote", label: "Quote", desc: "Capture a quote", icon: "❝", keywords: ["quote", "blockquote"] },
   { type: "callout", label: "Callout", desc: "Make text stand out", icon: "💡", keywords: ["callout", "note", "info"] },
   { type: "code", label: "Code", desc: "Code snippet", icon: "</>", keywords: ["code", "snippet", "mono"] },
+  { type: "image", label: "Image", desc: "Upload or embed an image", icon: "🖼", keywords: ["image", "photo", "picture", "img", "upload"] },
   { type: "divider", label: "Divider", desc: "Visual separator", icon: "—", keywords: ["divider", "line", "separator", "hr"] },
 ];
 

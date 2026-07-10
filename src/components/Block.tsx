@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import clsx from "clsx";
 import { useStore } from "@/store/useStore";
-import type { Block as BlockT, BlockType } from "@/lib/types";
+import type { Block as BlockT, BlockType, Page } from "@/lib/types";
 import {
   BlockCommand,
   filterCommands,
   markdownShortcut,
 } from "@/lib/blockCommands";
-import { splitAtCaret } from "@/lib/richtext";
+import { splitAtCaret, replaceTriggerToken } from "@/lib/richtext";
 import SlashMenu from "./SlashMenu";
+import MentionMenu from "./MentionMenu";
+import ImageBlock from "./ImageBlock";
 
 export interface BlockHandlers {
   focusBlock: (id: string, pos: "start" | "end") => void;
@@ -51,6 +53,7 @@ const TYPE_CLASS: Record<BlockType, string> = {
   quote: "text-[16px] leading-7 italic",
   callout: "text-[16px] leading-7",
   code: "font-mono text-sm leading-6",
+  image: "",
   divider: "",
 };
 
@@ -79,10 +82,26 @@ export default function Block({
   const updateBlock = useStore((s) => s.updateBlock);
   const setBlockType = useStore((s) => s.setBlockType);
   const toggleTodo = useStore((s) => s.toggleTodo);
+  const setCurrentPage = useStore((s) => s.setCurrentPage);
 
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashQuery, setSlashQuery] = useState("");
   const [slashIndex, setSlashIndex] = useState(0);
+
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionIndex, setMentionIndex] = useState(0);
+
+  // Non-reactive snapshot of pages, filtered by the current @ query.
+  const mentionPages: Page[] = mentionOpen
+    ? Object.values(useStore.getState().pages)
+        .filter((p) =>
+          (p.title || "Untitled")
+            .toLowerCase()
+            .includes(mentionQuery.trim().toLowerCase())
+        )
+        .slice(0, 8)
+    : [];
 
   // Sync DOM from state when not focused (external changes).
   useEffect(() => {
@@ -135,6 +154,23 @@ export default function Block({
     [applyType, block.id, handlers, pageId, updateBlock]
   );
 
+  const selectMention = useCallback(
+    (page: Page) => {
+      const el = ref.current;
+      if (!el) return;
+      const link = document.createElement("a");
+      link.setAttribute("data-page-id", page.id);
+      link.setAttribute("contenteditable", "false");
+      link.className = "potion-mention";
+      link.textContent = `${page.icon} ${page.title || "Untitled"}`;
+      replaceTriggerToken(el, "@", link);
+      updateBlock(pageId, block.id, el.innerHTML);
+      setMentionOpen(false);
+      setMentionQuery("");
+    },
+    [block.id, pageId, updateBlock]
+  );
+
   const onInput = () => {
     const el = ref.current;
     if (!el) return;
@@ -149,6 +185,17 @@ export default function Block({
       } else {
         setSlashQuery(text.slice(slashPos + 1));
         setSlashIndex(0);
+      }
+    }
+
+    // @-mention detection
+    if (mentionOpen) {
+      const atPos = text.lastIndexOf("@");
+      if (atPos < 0 || /\s/.test(text.slice(atPos + 1))) {
+        setMentionOpen(false);
+      } else {
+        setMentionQuery(text.slice(atPos + 1));
+        setMentionIndex(0);
       }
     }
   };
@@ -182,11 +229,44 @@ export default function Block({
       }
     }
 
+    // Mention menu navigation
+    if (mentionOpen) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionIndex((i) => Math.min(i + 1, mentionPages.length - 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionIndex((i) => Math.max(i - 1, 0));
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (mentionPages[mentionIndex]) selectMention(mentionPages[mentionIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setMentionOpen(false);
+        setMentionQuery("");
+        return;
+      }
+    }
+
     // Open slash menu
     if (e.key === "/" && !slashOpen) {
       setSlashOpen(true);
       setSlashQuery("");
       setSlashIndex(0);
+      return;
+    }
+
+    // Open mention menu
+    if (e.key === "@" && !mentionOpen) {
+      setMentionOpen(true);
+      setMentionQuery("");
+      setMentionIndex(0);
       return;
     }
 
@@ -269,6 +349,26 @@ export default function Block({
     );
   }
 
+  // ---- Image block ----
+  if (block.type === "image") {
+    return (
+      <div className="group relative py-0.5">
+        <ImageBlock pageId={pageId} block={block} />
+      </div>
+    );
+  }
+
+  // Navigate when an inline @-mention chip is clicked.
+  const onEditableClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const mention = target.closest?.("[data-page-id]");
+    if (mention) {
+      e.preventDefault();
+      const id = mention.getAttribute("data-page-id");
+      if (id) setCurrentPage(id);
+    }
+  };
+
   const editable = (
     <div
       ref={ref}
@@ -278,6 +378,7 @@ export default function Block({
       data-placeholder={PLACEHOLDER[block.type] ?? ""}
       onInput={onInput}
       onKeyDown={onKeyDown}
+      onClick={onEditableClick}
       className={clsx("potion-editable flex-1 outline-none", TYPE_CLASS[block.type])}
     />
   );
@@ -340,6 +441,14 @@ export default function Block({
           activeIndex={slashIndex}
           onHover={setSlashIndex}
           onSelect={selectCommand}
+        />
+      )}
+      {mentionOpen && (
+        <MentionMenu
+          items={mentionPages}
+          activeIndex={mentionIndex}
+          onHover={setMentionIndex}
+          onSelect={selectMention}
         />
       )}
     </div>

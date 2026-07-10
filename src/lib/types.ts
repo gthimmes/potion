@@ -9,6 +9,7 @@ export type BlockType =
   | "quote"
   | "callout"
   | "code"
+  | "image"
   | "divider";
 
 export interface Block {

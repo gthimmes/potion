@@ -75,6 +75,19 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
+.potion-editable a.potion-mention {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 0 3px;
+  background: rgba(35, 131, 226, 0.14);
+  box-shadow: inset 0 -1px 0 rgba(35, 131, 226, 0.35);
+  white-space: nowrap;
+}
+.potion-editable a.potion-mention:hover {
+  background: rgba(35, 131, 226, 0.24);
+}
 
 .text-soft {
   color: var(--text-soft);

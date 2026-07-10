@@ -25,6 +25,41 @@ export function splitAtCaret(el: HTMLElement): { before: string; after: string }
   return { before: el.innerHTML, after: tmp.innerHTML };
 }
 
+// Replace the trailing "<trigger>query" token (e.g. "@Design") at the caret
+// with the given node, then place the caret just after it.
+export function replaceTriggerToken(
+  el: HTMLElement,
+  trigger: string,
+  node: Node
+): boolean {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  const textNode = range.endContainer;
+  const offset = range.endOffset;
+  if (textNode.nodeType !== Node.TEXT_NODE) return false;
+  const data = textNode.textContent ?? "";
+  const at = data.lastIndexOf(trigger, offset - 1);
+  if (at < 0) return false;
+
+  const del = document.createRange();
+  del.setStart(textNode, at);
+  del.setEnd(textNode, offset);
+  del.deleteContents();
+  del.insertNode(node);
+
+  const space = document.createTextNode(" ");
+  (node as ChildNode).after(space);
+
+  const caret = document.createRange();
+  caret.setStartAfter(space);
+  caret.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(caret);
+  void el;
+  return true;
+}
+
 // Place the caret at a given text offset inside an element that may
 // contain nested inline elements.
 export function setTextCaret(el: HTMLElement, offset: number) {
