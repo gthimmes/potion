@@ -10,6 +10,7 @@ export type BlockType =
   | "callout"
   | "code"
   | "image"
+  | "page"
   | "divider";
 
 export interface Block {

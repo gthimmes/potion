@@ -27,18 +27,27 @@ export default function Editor({ pageId }: { pageId: string }) {
 
   const blocks = page?.blocks ?? [];
 
+  // A focus request that may target a block that hasn't mounted yet.
+  const pendingFocus = useRef<{ id: string; pos: "start" | "end" } | null>(null);
+
+  const placeCaret = (el: HTMLElement, pos: "start" | "end") => {
+    el.focus();
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(pos === "start");
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  };
+
   const focusBlock = useCallback((id: string, pos: "start" | "end") => {
-    requestAnimationFrame(() => {
-      const el = refs.current.get(id);
-      if (!el) return;
-      el.focus();
-      const sel = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      range.collapse(pos === "start");
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-    });
+    const el = refs.current.get(id);
+    if (el) {
+      requestAnimationFrame(() => placeCaret(el, pos));
+    } else {
+      // Block not mounted yet (just inserted) — focus it when it registers.
+      pendingFocus.current = { id, pos };
+    }
   }, []);
 
   const focusAtOffset = useCallback((id: string, offset: number) => {
@@ -49,8 +58,16 @@ export default function Editor({ pageId }: { pageId: string }) {
   }, []);
 
   const register = useCallback((id: string, el: HTMLElement | null) => {
-    if (el) refs.current.set(id, el);
-    else refs.current.delete(id);
+    if (el) {
+      refs.current.set(id, el);
+      if (pendingFocus.current?.id === id) {
+        const { pos } = pendingFocus.current;
+        pendingFocus.current = null;
+        requestAnimationFrame(() => placeCaret(el, pos));
+      }
+    } else {
+      refs.current.delete(id);
+    }
   }, []);
 
   const handlers: BlockHandlers = useMemo(

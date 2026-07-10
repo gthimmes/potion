@@ -10,6 +10,7 @@ export interface BlockCommand {
 
 export const BLOCK_COMMANDS: BlockCommand[] = [
   { type: "text", label: "Text", desc: "Plain paragraph", icon: "¶", keywords: ["text", "paragraph", "plain"] },
+  { type: "page", label: "Page", desc: "Embed a sub-page inside this page", icon: "📄", keywords: ["page", "subpage", "sub-page", "nested"] },
   { type: "h1", label: "Heading 1", desc: "Big section heading", icon: "H₁", keywords: ["h1", "heading", "title", "big"] },
   { type: "h2", label: "Heading 2", desc: "Medium heading", icon: "H₂", keywords: ["h2", "heading", "subtitle"] },
   { type: "h3", label: "Heading 3", desc: "Small heading", icon: "H₃", keywords: ["h3", "heading", "small"] },

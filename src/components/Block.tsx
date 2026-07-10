@@ -13,6 +13,7 @@ import { splitAtCaret, replaceTriggerToken } from "@/lib/richtext";
 import SlashMenu from "./SlashMenu";
 import MentionMenu from "./MentionMenu";
 import ImageBlock from "./ImageBlock";
+import SubpageBlock from "./SubpageBlock";
 
 export interface BlockHandlers {
   focusBlock: (id: string, pos: "start" | "end") => void;
@@ -54,6 +55,7 @@ const TYPE_CLASS: Record<BlockType, string> = {
   callout: "text-[16px] leading-7",
   code: "font-mono text-sm leading-6",
   image: "",
+  page: "",
   divider: "",
 };
 
@@ -83,6 +85,7 @@ export default function Block({
   const setBlockType = useStore((s) => s.setBlockType);
   const toggleTodo = useStore((s) => s.toggleTodo);
   const setCurrentPage = useStore((s) => s.setCurrentPage);
+  const createChildPage = useStore((s) => s.createChildPage);
 
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashQuery, setSlashQuery] = useState("");
@@ -129,6 +132,9 @@ export default function Block({
       }
       setSlashOpen(false);
       setSlashQuery("");
+      // Keep focus synchronously so immediate typing lands, then place the
+      // caret once the re-rendered wrapper has settled.
+      ref.current?.focus();
       requestAnimationFrame(() => {
         if (ref.current) setCaret(ref.current, "end");
       });
@@ -147,11 +153,20 @@ export default function Block({
       if (cmd.type === "divider") {
         applyType("divider");
         handlers.onEnter(block.id, "");
+      } else if (cmd.type === "page") {
+        // Create a real child page and turn this block into a link to it.
+        const childId = createChildPage(pageId);
+        setBlockType(pageId, block.id, "page");
+        updateBlock(pageId, block.id, childId);
+        setSlashOpen(false);
+        setSlashQuery("");
+        // Give the user a fresh text block to keep writing in.
+        handlers.onEnter(block.id, "");
       } else {
         applyType(cmd.type);
       }
     },
-    [applyType, block.id, handlers, pageId, updateBlock]
+    [applyType, block.id, createChildPage, handlers, pageId, setBlockType, updateBlock]
   );
 
   const selectMention = useCallback(
@@ -354,6 +369,15 @@ export default function Block({
     return (
       <div className="group relative py-0.5">
         <ImageBlock pageId={pageId} block={block} />
+      </div>
+    );
+  }
+
+  // ---- Sub-page block ----
+  if (block.type === "page") {
+    return (
+      <div className="group relative py-0.5">
+        <SubpageBlock pageId={pageId} block={block} />
       </div>
     );
   }
