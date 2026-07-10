@@ -61,6 +61,21 @@ body {
   background-clip: padding-box;
 }
 
+/* Inline rich-text inside editable blocks */
+.potion-editable code {
+  background: rgba(135, 131, 120, 0.18);
+  color: #eb5757;
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-size: 0.9em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.potion-editable a {
+  color: #2383e2;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .text-soft {
   color: var(--text-soft);
 }

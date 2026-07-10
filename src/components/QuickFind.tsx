@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import clsx from "clsx";
 import { useStore } from "@/store/useStore";
+import { stripHtml } from "@/lib/richtext";
 
 export default function QuickFind({ onClose }: { onClose: () => void }) {
   const pages = useStore((s) => s.pages);
@@ -18,7 +19,7 @@ export default function QuickFind({ onClose }: { onClose: () => void }) {
       ? all.filter((p) => {
           const inTitle = (p.title || "Untitled").toLowerCase().includes(query);
           const inBody = p.blocks.some((b) =>
-            b.content.toLowerCase().includes(query)
+            stripHtml(b.content).toLowerCase().includes(query)
           );
           return inTitle || inBody;
         })

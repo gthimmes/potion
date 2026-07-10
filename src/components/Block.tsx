@@ -9,6 +9,7 @@ import {
   filterCommands,
   markdownShortcut,
 } from "@/lib/blockCommands";
+import { splitAtCaret } from "@/lib/richtext";
 import SlashMenu from "./SlashMenu";
 
 export interface BlockHandlers {
@@ -87,8 +88,8 @@ export default function Block({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (document.activeElement !== el && el.textContent !== block.content) {
-      el.textContent = block.content;
+    if (document.activeElement !== el && el.innerHTML !== block.content) {
+      el.innerHTML = block.content;
     }
   }, [block.content]);
 
@@ -118,12 +119,10 @@ export default function Block({
 
   const selectCommand = useCallback(
     (cmd: BlockCommand) => {
-      // remove the "/query" text
+      // remove the trailing "/query" token, preserving any earlier formatting
       if (ref.current) {
-        const txt = ref.current.textContent ?? "";
-        const slashPos = txt.lastIndexOf("/");
-        const cleaned = slashPos >= 0 ? txt.slice(0, slashPos) : txt;
-        ref.current.textContent = cleaned;
+        const cleaned = ref.current.innerHTML.replace(/\/[^<>/]*$/, "");
+        ref.current.innerHTML = cleaned;
         updateBlock(pageId, block.id, cleaned);
       }
       if (cmd.type === "divider") {
@@ -139,10 +138,10 @@ export default function Block({
   const onInput = () => {
     const el = ref.current;
     if (!el) return;
-    const text = el.textContent ?? "";
-    updateBlock(pageId, block.id, text);
+    updateBlock(pageId, block.id, el.innerHTML);
 
-    // slash detection
+    // slash detection (against plain text)
+    const text = el.textContent ?? "";
     const slashPos = text.lastIndexOf("/");
     if (slashOpen) {
       if (slashPos < 0) {
@@ -199,7 +198,7 @@ export default function Block({
       const type = markdownShortcut(token);
       if (type && offset === token.length) {
         e.preventDefault();
-        // strip token
+        // strip the leading token (safe: it's plain text at the very start)
         const rest = text.slice(offset);
         el.textContent = rest;
         updateBlock(pageId, block.id, rest);
@@ -211,7 +210,6 @@ export default function Block({
     // Enter -> split / new block
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      const offset = caretOffset(el);
       const text = el.textContent ?? "";
       // exit list on empty enter
       if (
@@ -223,9 +221,7 @@ export default function Block({
         setBlockType(pageId, block.id, "text");
         return;
       }
-      const before = text.slice(0, offset);
-      const after = text.slice(offset);
-      el.textContent = before;
+      const { before, after } = splitAtCaret(el);
       updateBlock(pageId, block.id, before);
       handlers.onEnter(block.id, after);
       return;
@@ -278,10 +274,11 @@ export default function Block({
       ref={ref}
       contentEditable
       suppressContentEditableWarning
+      data-block-id={block.id}
       data-placeholder={PLACEHOLDER[block.type] ?? ""}
       onInput={onInput}
       onKeyDown={onKeyDown}
-      className={clsx("flex-1 outline-none", TYPE_CLASS[block.type])}
+      className={clsx("potion-editable flex-1 outline-none", TYPE_CLASS[block.type])}
     />
   );
 

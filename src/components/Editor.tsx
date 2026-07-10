@@ -3,31 +3,26 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useStore } from "@/store/useStore";
 import type { BlockType } from "@/lib/types";
+import { setTextCaret, stripHtml } from "@/lib/richtext";
 import Block, { BlockHandlers } from "./Block";
-
-function setCaretOffset(el: HTMLElement, offset: number) {
-  el.focus();
-  const sel = window.getSelection();
-  const range = document.createRange();
-  const node = el.firstChild ?? el;
-  const max = el.textContent?.length ?? 0;
-  const pos = Math.min(offset, max);
-  if (node.nodeType === Node.TEXT_NODE) {
-    range.setStart(node, pos);
-  } else {
-    range.selectNodeContents(el);
-    range.collapse(false);
-  }
-  range.collapse(true);
-  sel?.removeAllRanges();
-  sel?.addRange(range);
-}
+import SelectionToolbar from "./SelectionToolbar";
+import SortableBlock from "./SortableBlock";
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 export default function Editor({ pageId }: { pageId: string }) {
   const page = useStore((s) => s.pages[pageId]);
   const insertBlock = useStore((s) => s.insertBlock);
   const deleteBlock = useStore((s) => s.deleteBlock);
   const updateBlock = useStore((s) => s.updateBlock);
+  const moveBlock = useStore((s) => s.moveBlock);
   const refs = useRef<Map<string, HTMLElement>>(new Map());
 
   const blocks = page?.blocks ?? [];
@@ -49,7 +44,7 @@ export default function Editor({ pageId }: { pageId: string }) {
   const focusAtOffset = useCallback((id: string, offset: number) => {
     requestAnimationFrame(() => {
       const el = refs.current.get(id);
-      if (el) setCaretOffset(el, offset);
+      if (el) setTextCaret(el, offset);
     });
   }, []);
 
@@ -84,7 +79,7 @@ export default function Editor({ pageId }: { pageId: string }) {
           focusBlock(blockId, "start");
           return;
         }
-        const mergedAt = prev.content.length;
+        const mergedAt = stripHtml(prev.content).length;
         updateBlock(pageId, prev.id, prev.content + curBlock.content);
         deleteBlock(pageId, blockId);
         focusAtOffset(prev.id, mergedAt);
@@ -101,19 +96,44 @@ export default function Editor({ pageId }: { pageId: string }) {
     [pageId, insertBlock, deleteBlock, updateBlock, focusBlock, focusAtOffset, register]
   );
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+  );
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = blocks.findIndex((b) => b.id === active.id);
+    const to = blocks.findIndex((b) => b.id === over.id);
+    if (from >= 0 && to >= 0) moveBlock(pageId, from, to);
+  };
+
   if (!page) return null;
 
   return (
     <div className="pb-32">
-      {blocks.map((block, i) => (
-        <Block
-          key={block.id}
-          pageId={pageId}
-          block={block}
-          index={i}
-          handlers={handlers}
-        />
-      ))}
+      <SelectionToolbar onFormat={(id, html) => updateBlock(pageId, id, html)} />
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+      >
+        <SortableContext
+          items={blocks.map((b) => b.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {blocks.map((block, i) => (
+            <SortableBlock key={block.id} id={block.id}>
+              <Block
+                pageId={pageId}
+                block={block}
+                index={i}
+                handlers={handlers}
+              />
+            </SortableBlock>
+          ))}
+        </SortableContext>
+      </DndContext>
       {/* click-to-add area */}
       <div
         onClick={() => {
