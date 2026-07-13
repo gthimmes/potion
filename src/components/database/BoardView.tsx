@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
 import type { DbView } from "@/lib/types";
+import { queryRows } from "@/lib/dbQuery";
 import { Tag } from "./SelectCell";
 import Cell from "./Cell";
 
@@ -35,6 +36,7 @@ export default function BoardView({
 
   const nameCol = db.columns[0];
   const groups = ["", ...(groupCol.options ?? [])];
+  const visibleRows = queryRows(db.rows, db.columns, view);
 
   const drop = (groupValue: string) => {
     if (dragRow) updateCell(pageId, dragRow, groupCol.id, groupValue);
@@ -44,7 +46,7 @@ export default function BoardView({
   return (
     <div className="flex gap-3 overflow-x-auto pb-4">
       {groups.map((g) => {
-        const rows = db.rows.filter(
+        const rows = visibleRows.filter(
           (r) => (r.cells[groupCol.id] ?? "") === g
         );
         return (

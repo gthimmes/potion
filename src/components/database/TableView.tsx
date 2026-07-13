@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
-import type { ColumnType, DbColumn } from "@/lib/types";
+import type { ColumnType, DbColumn, DbView } from "@/lib/types";
+import { queryRows } from "@/lib/dbQuery";
 import Cell from "./Cell";
 
 const TYPE_ICON: Record<ColumnType, string> = {
@@ -95,12 +96,20 @@ function AddColumnButton({ pageId }: { pageId: string }) {
   );
 }
 
-export default function TableView({ pageId }: { pageId: string }) {
+export default function TableView({
+  pageId,
+  view,
+}: {
+  pageId: string;
+  view: DbView;
+}) {
   const page = useStore((s) => s.pages[pageId]);
   const addRow = useStore((s) => s.addRow);
   const deleteRow = useStore((s) => s.deleteRow);
   const db = page?.database;
   if (!db) return null;
+
+  const rows = queryRows(db.rows, db.columns, view);
 
   const gridCols = `minmax(0,2fr) ${db.columns
     .slice(1)
@@ -124,7 +133,7 @@ export default function TableView({ pageId }: { pageId: string }) {
         </div>
 
         {/* rows */}
-        {db.rows.map((row) => (
+        {rows.map((row) => (
           <div
             key={row.id}
             className="group grid border-b border-app hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"

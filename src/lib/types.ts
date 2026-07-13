@@ -37,11 +37,44 @@ export interface DbRow {
 
 export type ViewType = "table" | "board";
 
+export type FilterOp =
+  | "contains"
+  | "not_contains"
+  | "is"
+  | "is_not"
+  | "is_empty"
+  | "is_not_empty"
+  | "eq"
+  | "neq"
+  | "gt"
+  | "lt"
+  | "gte"
+  | "lte"
+  | "checked"
+  | "unchecked"
+  | "before"
+  | "after";
+
+export interface Filter {
+  id: string;
+  columnId: string;
+  op: FilterOp;
+  value: string;
+}
+
+export interface Sort {
+  id: string;
+  columnId: string;
+  dir: "asc" | "desc";
+}
+
 export interface DbView {
   id: string;
   name: string;
   type: ViewType;
   groupBy?: string; // columnId, for board
+  filters?: Filter[];
+  sorts?: Sort[];
 }
 
 export interface Database {

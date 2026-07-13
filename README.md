@@ -16,7 +16,7 @@ A local-first Notion competitor — block-based docs, nested pages, and database
 - **Keyboard-native** — Enter splits blocks, Backspace merges, arrow keys move between blocks.
 - **Nested pages** — infinite page tree in the sidebar with expand/collapse, subpages, breadcrumbs.
 - **Page styling** — emoji icons and gradient covers.
-- **Databases** — Table and Board (Kanban) views. Column types: text, number, select (colored tags), date, checkbox. Drag cards between board columns.
+- **Databases** — Table and Board (Kanban) views. Column types: text, number, select (colored tags), date, checkbox. Drag cards between board columns. **Filter and sort** any view by any column.
 - **Quick Find** — `⌘K` / `Ctrl+K` to search pages by title or content.
 - **Dark mode**.
 
@@ -46,4 +46,4 @@ src/
 
 ## Roadmap (not yet built)
 
-Real-time collaboration, accounts/auth, sharing & permissions, database filters/sorts, and a public API.
+Real-time collaboration, accounts/auth, sharing & permissions, and a public API.

@@ -10,7 +10,9 @@ import type {
   Database,
   DbColumn,
   DbRow,
+  Filter,
   Page,
+  Sort,
   Theme,
   ViewType,
 } from "@/lib/types";
@@ -103,6 +105,8 @@ interface StoreState {
   renameColumn: (pageId: string, columnId: string, name: string) => void;
   deleteColumn: (pageId: string, columnId: string) => void;
   addSelectOption: (pageId: string, columnId: string, option: string) => void;
+  setViewFilters: (pageId: string, viewId: string, filters: Filter[]) => void;
+  setViewSorts: (pageId: string, viewId: string, sorts: Sort[]) => void;
 }
 
 function touch(page: Page): Page {
@@ -438,9 +442,12 @@ export const useStore = create<StoreState>()(
             delete cells[columnId];
             return { ...r, cells };
           });
-          const views = page.database.views.map((v) =>
-            v.groupBy === columnId ? { ...v, groupBy: undefined } : v
-          );
+          const views = page.database.views.map((v) => ({
+            ...v,
+            groupBy: v.groupBy === columnId ? undefined : v.groupBy,
+            filters: v.filters?.filter((f) => f.columnId !== columnId),
+            sorts: v.sorts?.filter((so) => so.columnId !== columnId),
+          }));
           return {
             pages: {
               ...s.pages,
@@ -472,6 +479,42 @@ export const useStore = create<StoreState>()(
               [pageId]: touch({
                 ...page,
                 database: { ...page.database, columns },
+              }),
+            },
+          };
+        }),
+
+      setViewFilters: (pageId, viewId, filters) =>
+        set((s) => {
+          const page = s.pages[pageId];
+          if (!page?.database) return s;
+          const views = page.database.views.map((v) =>
+            v.id === viewId ? { ...v, filters } : v
+          );
+          return {
+            pages: {
+              ...s.pages,
+              [pageId]: touch({
+                ...page,
+                database: { ...page.database, views },
+              }),
+            },
+          };
+        }),
+
+      setViewSorts: (pageId, viewId, sorts) =>
+        set((s) => {
+          const page = s.pages[pageId];
+          if (!page?.database) return s;
+          const views = page.database.views.map((v) =>
+            v.id === viewId ? { ...v, sorts } : v
+          );
+          return {
+            pages: {
+              ...s.pages,
+              [pageId]: touch({
+                ...page,
+                database: { ...page.database, views },
               }),
             },
           };

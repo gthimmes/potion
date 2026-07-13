@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useStore } from "@/store/useStore";
 import TableView from "./TableView";
 import BoardView from "./BoardView";
+import FilterSortBar from "./FilterSortBar";
 
 export default function DatabaseView({ pageId }: { pageId: string }) {
   const page = useStore((s) => s.pages[pageId]);
@@ -34,8 +35,10 @@ export default function DatabaseView({ pageId }: { pageId: string }) {
         ))}
       </div>
 
+      <FilterSortBar pageId={pageId} view={active} columns={db.columns} />
+
       {active.type === "table" ? (
-        <TableView pageId={pageId} />
+        <TableView pageId={pageId} view={active} />
       ) : (
         <BoardView pageId={pageId} view={active} />
       )}
