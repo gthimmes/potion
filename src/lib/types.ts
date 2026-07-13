@@ -11,6 +11,7 @@ export type BlockType =
   | "code"
   | "image"
   | "page"
+  | "database"
   | "divider";
 
 export interface Block {

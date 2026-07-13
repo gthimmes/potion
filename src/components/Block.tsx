@@ -14,6 +14,7 @@ import SlashMenu from "./SlashMenu";
 import MentionMenu from "./MentionMenu";
 import ImageBlock from "./ImageBlock";
 import SubpageBlock from "./SubpageBlock";
+import InlineDatabase from "./InlineDatabase";
 
 export interface BlockHandlers {
   focusBlock: (id: string, pos: "start" | "end") => void;
@@ -56,6 +57,7 @@ const TYPE_CLASS: Record<BlockType, string> = {
   code: "font-mono text-sm leading-6",
   image: "",
   page: "",
+  database: "",
   divider: "",
 };
 
@@ -86,6 +88,7 @@ export default function Block({
   const toggleTodo = useStore((s) => s.toggleTodo);
   const setCurrentPage = useStore((s) => s.setCurrentPage);
   const createChildPage = useStore((s) => s.createChildPage);
+  const createChildDatabase = useStore((s) => s.createChildDatabase);
 
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashQuery, setSlashQuery] = useState("");
@@ -162,11 +165,28 @@ export default function Block({
         setSlashQuery("");
         // Give the user a fresh text block to keep writing in.
         handlers.onEnter(block.id, "");
+      } else if (cmd.type === "database") {
+        // Create a real child database and embed it inline in this block.
+        const childId = createChildDatabase(pageId);
+        setBlockType(pageId, block.id, "database");
+        updateBlock(pageId, block.id, childId);
+        setSlashOpen(false);
+        setSlashQuery("");
+        handlers.onEnter(block.id, "");
       } else {
         applyType(cmd.type);
       }
     },
-    [applyType, block.id, createChildPage, handlers, pageId, setBlockType, updateBlock]
+    [
+      applyType,
+      block.id,
+      createChildPage,
+      createChildDatabase,
+      handlers,
+      pageId,
+      setBlockType,
+      updateBlock,
+    ]
   );
 
   const selectMention = useCallback(
@@ -378,6 +398,15 @@ export default function Block({
     return (
       <div className="group relative py-0.5">
         <SubpageBlock pageId={pageId} block={block} />
+      </div>
+    );
+  }
+
+  // ---- Inline database block ----
+  if (block.type === "database") {
+    return (
+      <div className="group relative py-0.5">
+        <InlineDatabase pageId={pageId} block={block} />
       </div>
     );
   }

@@ -8,6 +8,7 @@ A local-first Notion competitor — block-based docs, nested pages, and database
 - **Inline formatting** — select text for a floating toolbar: bold, italic, underline, strikethrough, inline code, and links.
 - **@-mentions** — type `@` to link to any page inline; click the chip to jump to it.
 - **Sub-page blocks** — `/page` embeds a real nested page inline; click to open it, and its title stays in sync everywhere.
+- **Inline databases** — `/database` embeds a full table + board database right inside a page; open it as a full page anytime with ↗.
 - **Image blocks** — embed by URL or upload from your device.
 - **Drag to reorder** — grab the ⋮⋮ handle to reorder blocks.
 - **Slash menu** — type `/` to insert any block; filter by name.
@@ -45,4 +46,4 @@ src/
 
 ## Roadmap (not yet built)
 
-Real-time collaboration, accounts/auth, sharing & permissions, inline/linked databases, and a public API.
+Real-time collaboration, accounts/auth, sharing & permissions, database filters/sorts, and a public API.

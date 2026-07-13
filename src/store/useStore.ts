@@ -79,6 +79,7 @@ interface StoreState {
   // page ops
   createPage: (parentId: string | null, isDatabase?: boolean) => string;
   createChildPage: (parentId: string) => string;
+  createChildDatabase: (parentId: string) => string;
   deletePage: (id: string) => void;
   setTitle: (id: string, title: string) => void;
   setIcon: (id: string, icon: string) => void;
@@ -146,6 +147,25 @@ export const useStore = create<StoreState>()(
       // Create a child page linked under `parentId` without navigating to it.
       createChildPage: (parentId) => {
         const page = newPage(parentId, false);
+        set((s) => {
+          const pages = { ...s.pages, [page.id]: page };
+          if (pages[parentId]) {
+            pages[parentId] = touch({
+              ...pages[parentId],
+              children: [...pages[parentId].children, page.id],
+            });
+          }
+          return {
+            pages,
+            expanded: { ...s.expanded, [parentId]: true },
+          };
+        });
+        return page.id;
+      },
+
+      // Create a child *database* under `parentId` without navigating to it.
+      createChildDatabase: (parentId) => {
+        const page = newPage(parentId, true);
         set((s) => {
           const pages = { ...s.pages, [page.id]: page };
           if (pages[parentId]) {
