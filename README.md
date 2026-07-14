@@ -29,9 +29,29 @@ npm run dev
 
 Open http://localhost:3000.
 
+## Testing
+
+Three layers, all runnable locally:
+
+```bash
+npm test         # unit + integration (Vitest + Testing Library, jsdom)
+npm run test:e2e # end-to-end (Playwright, real Chromium)
+```
+
+- **Unit** — the Zustand store (every page/block/database action), the database
+  filter/sort engine (`lib/dbQuery`), rich-text helpers, block commands, constants.
+- **Integration** — components against the real store: `TableView`, `DatabaseView`
+  (filter/sort UI), `Sidebar`, `QuickFind`.
+- **End-to-end** — real-browser journeys Playwright can exercise that jsdom can't:
+  markdown shortcuts, the slash menu, contentEditable editing, to-dos, sub-pages,
+  database filtering, board view, and ⌘K quick find.
+
+75 unit/integration specs + 9 e2e specs.
+
 ## Stack
 
 Next.js (App Router) · React · TypeScript · Tailwind CSS · Zustand (persisted to localStorage).
+Tested with Vitest, Testing Library, and Playwright.
 
 ## Project layout
 
