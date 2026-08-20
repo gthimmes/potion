@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import HelpWidget from "@/components/HelpWidget";
 
 export const metadata: Metadata = {
   title: "Potion",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {children}
+        <HelpWidget />
+      </body>
     </html>
   );
 }
