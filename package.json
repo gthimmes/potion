@@ -18,10 +18,10 @@
     "clsx": "2.1.1",
     "help-navigator": "github:gthimmes/help-navigator",
     "nanoid": "5.1.16",
-    "next": "14.2.35",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "zustand": "4.5.4"
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
@@ -29,8 +29,8 @@
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
     "@types/node": "20.19.43",
-    "@types/react": "18.3.3",
-    "@types/react-dom": "18.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "10.4.19",
     "jsdom": "^25.0.1",
